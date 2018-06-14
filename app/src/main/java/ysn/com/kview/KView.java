@@ -12,6 +12,8 @@ import android.support.annotation.Nullable;
 import android.util.AttributeSet;
 import android.view.View;
 
+import com.lazy.library.logging.Logcat;
+
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.List;
@@ -83,6 +85,12 @@ public class KView extends View {
     private Paint rowPaint;
     private Path path;
 
+    private int viewHeight;
+    private int viewWidth;
+    private float xSpace;
+    private float ySpace;
+    private Paint linePaint;
+
     public KView(Context context) {
         this(context, null);
     }
@@ -119,14 +127,19 @@ public class KView extends View {
 
         xYTextBgPaint = new Paint();
         xYTextBgPaint.setColor(Color.YELLOW);
+
+        linePaint = new Paint();
+        linePaint.setColor(ResUtil.getColor(R.color.colorAccent));
+        linePaint.setStyle(Paint.Style.STROKE);
     }
 
     @Override
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
 
-        int viewHeight = getHeight();
-        int viewWidth = getWidth();
+        viewHeight = getHeight();
+        viewWidth = getWidth();
+        initXYText();
 
         float columnSpacing = (viewWidth - 2 * margin) / column;
         float rowSpacing = viewHeight / row;
@@ -142,6 +155,9 @@ public class KView extends View {
 
         // 绘制坐标
         drawXYText(canvas, viewHeight, viewWidth);
+
+        // 绘制价格线
+        drawLine(canvas);
     }
 
     /**
@@ -224,6 +240,19 @@ public class KView extends View {
                 rect1.bottom - xYTextMargin, xYTextPaint);
     }
 
+    /**
+     * 绘制价格线
+     */
+    private void drawLine(Canvas canvas) {
+        path.reset();
+        path.moveTo(margin, lastClose - stockPriceList.get(0) + viewHeight / 2);
+        for (int i = 1; i < stockPriceList.size(); i++) {
+            path.lineTo( margin + xSpace * i, (lastClose - stockPriceList.get(i)) * ySpace + viewHeight / 2);
+            Logcat.d("i: "+ margin + xSpace * i );
+        }
+        canvas.drawPath(path, linePaint);
+    }
+
     public void setDate(TimeSharing timeSharing) {
         String[] stockPrices = timeSharing.stockPrice.split(",");
         if (stockPrices.length > 0) {
@@ -236,7 +265,6 @@ public class KView extends View {
             }
         }
         lastClose = timeSharing.lastClose;
-        initXYText();
     }
 
     private void initXYText() {
@@ -254,5 +282,7 @@ public class KView extends View {
         }
 
         percent = " " + decimalFormat.format((maxY - lastClose) / 100) + "%";
+        xSpace = (viewWidth-margin*2) /(float) POINT_COUNT_DEFAULT;
+        ySpace = (viewHeight / (maxY - minY));
     }
 }
