@@ -247,8 +247,8 @@ public class KView extends View {
         path.reset();
         path.moveTo(margin, lastClose - stockPriceList.get(0) + viewHeight / 2);
         for (int i = 1; i < stockPriceList.size(); i++) {
-            path.lineTo( margin + xSpace * i, (lastClose - stockPriceList.get(i)) * ySpace + viewHeight / 2);
-            Logcat.d("i: "+ margin + xSpace * i );
+            path.lineTo(margin + xSpace * i, (lastClose - stockPriceList.get(i)) * ySpace + viewHeight / 2);
+            Logcat.d("i: " + margin + xSpace * i);
         }
         canvas.drawPath(path, linePaint);
     }
@@ -274,6 +274,25 @@ public class KView extends View {
             }
         }
 
+        for (int i = 0; i < stockPriceList.size(); i++) {
+            if (i == 0) {
+                maxY = stockPriceList.get(i);
+                minY = stockPriceList.get(i);
+            }
+
+            if (maxY < stockPriceList.get(i)) {
+                maxY = stockPriceList.get(i);
+            } else if (minY > stockPriceList.get(i)) {
+                minY = stockPriceList.get(i);
+            }
+        }
+
+        if (Math.abs(minY - lastClose) > Math.abs(maxY - lastClose)) {
+            float temp = maxY;
+            maxY = minY;
+            minY = temp;
+        }
+
         if (maxY > lastClose) {
             minY = lastClose * 2 - maxY;
         } else {
@@ -282,7 +301,7 @@ public class KView extends View {
         }
 
         percent = " " + decimalFormat.format((maxY - lastClose) / 100) + "%";
-        xSpace = (viewWidth-margin*2) /(float) POINT_COUNT_DEFAULT;
+        xSpace = (viewWidth - margin * 2) / (float) POINT_COUNT_DEFAULT;
         ySpace = (viewHeight / (maxY - minY));
     }
 }
