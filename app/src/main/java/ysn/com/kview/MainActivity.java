@@ -19,13 +19,13 @@ public class MainActivity extends AppCompatActivity {
         TimeSharing timeSharing = new TimeSharing();
         for (int i = 0; i < 240; i++) {
             if (i % 2 == 0) {
-                timeSharing.stockPrice += String.valueOf(400 + random.nextInt(2)) + ",";
+                timeSharing.stockPrice += String.valueOf(400 + random.nextInt(10)) + ",";
             } else {
-                timeSharing.stockPrice += String.valueOf(400 - random.nextInt(2)) + ",";
+                timeSharing.stockPrice += String.valueOf(400 - random.nextInt(10)) + ",";
             }
         }
         timeSharing.stockPrice += "400";
-        timeSharing.lastClose = 40;
+        timeSharing.lastClose = 405;
         kView.setDate(timeSharing);
     }
 }

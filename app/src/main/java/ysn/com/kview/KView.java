@@ -73,8 +73,9 @@ public class KView extends View {
     private Paint xYTextPaint;
     private Paint xYTextBgPaint;
     private float lastClose = 0.0f;
-    private float maxStockPrice = 0.0f;
-    private float minStockPrice = 0.0f;
+    private float maxY = 0.0f;
+    private float minY = 0.0f;
+    private String percent = " 100%";
 
     private DecimalFormat decimalFormat;
 
@@ -126,8 +127,6 @@ public class KView extends View {
 
         int viewHeight = getHeight();
         int viewWidth = getWidth();
-        maxStockPrice = getMaxStockPrice();
-        minStockPrice = getMinStockPrice();
 
         float columnSpacing = (viewWidth - 2 * margin) / column;
         float rowSpacing = viewHeight / row;
@@ -185,45 +184,43 @@ public class KView extends View {
      */
     private void drawXYText(Canvas canvas, int viewHeight, int viewWidth) {
         // 价格最大值
-        String minPrice = decimalFormat.format(minStockPrice);
+        String maxPrice = decimalFormat.format(maxY);
         Rect rect1 = new Rect();
-        xYTextPaint.getTextBounds(minPrice, 0, minPrice.length(), rect1);
+        xYTextPaint.getTextBounds(maxPrice, 0, maxPrice.length(), rect1);
         rect1.left += margin;
         rect1.top += xYTextSize - xYTextMargin;
         rect1.right += rect1.left + xYTextMargin * 2;
         rect1.bottom += xYTextMargin + xYTextSize;
         canvas.drawRect(rect1, xYTextBgPaint);
-        canvas.drawText(minPrice, margin + xYTextMargin, xYTextSize, xYTextPaint);
+        canvas.drawText(maxPrice, margin + xYTextMargin, xYTextSize, xYTextPaint);
 
         // 价格最小值
-        String maxPrice = decimalFormat.format(maxStockPrice);
-        xYTextPaint.getTextBounds(maxPrice, 0, maxPrice.length(), rect1);
+        String minPrice = decimalFormat.format(minY);
+        xYTextPaint.getTextBounds(minPrice, 0, minPrice.length(), rect1);
         rect1.left += margin;
         rect1.right += rect1.left + xYTextMargin * 2;
         rect1.bottom += viewHeight - xYTextMargin / 2;
         rect1.top = (int) (rect1.bottom - xYTextSize - xYTextMargin / 2);
         canvas.drawRect(rect1, xYTextBgPaint);
-        canvas.drawText(maxPrice, margin + xYTextMargin, rect1.bottom - xYTextMargin, xYTextPaint);
+        canvas.drawText(minPrice, margin + xYTextMargin, rect1.bottom - xYTextMargin, xYTextPaint);
 
         // 增幅
-        String increasePrice = " 10.00%";
-        xYTextPaint.getTextBounds(increasePrice, 0, increasePrice.length(), rect1);
+        xYTextPaint.getTextBounds(percent, 0, percent.length(), rect1);
         rect1.left += viewWidth - rect1.right - xYTextMargin * 3 - margin * 2;
         rect1.top += xYTextSize - xYTextMargin;
         rect1.right += rect1.left + xYTextMargin * 2;
         rect1.bottom += xYTextMargin + xYTextSize;
         canvas.drawRect(rect1, xYTextBgPaint);
-        canvas.drawText(increasePrice.trim(), rect1.left + xYTextMargin, xYTextSize, xYTextPaint);
+        canvas.drawText(percent.trim(), rect1.left + xYTextMargin, xYTextSize, xYTextPaint);
 
         // 减幅
-        String decreasePrice = " 10.00%";
-        xYTextPaint.getTextBounds(decreasePrice, 0, decreasePrice.length(), rect1);
+        xYTextPaint.getTextBounds(percent, 0, percent.length(), rect1);
         rect1.left += viewWidth - rect1.right - xYTextMargin * 3 - margin * 2;
         rect1.right += rect1.left + xYTextMargin * 2;
         rect1.top = (int) (viewHeight - xYTextSize - xYTextMargin);
         rect1.bottom = (int) (viewHeight - xYTextMargin / 2);
         canvas.drawRect(rect1, xYTextBgPaint);
-        canvas.drawText("-" + decreasePrice.trim(), rect1.left + xYTextMargin,
+        canvas.drawText("-" + percent.trim(), rect1.left + xYTextMargin,
                 rect1.bottom - xYTextMargin, xYTextPaint);
     }
 
@@ -239,41 +236,23 @@ public class KView extends View {
             }
         }
         lastClose = timeSharing.lastClose;
+        initXYText();
     }
 
-    /**
-     * 价格的最大值
-     *
-     * @return
-     */
-    private float getMaxStockPrice() {
-        float max = 0.0f;
-        if (stockPriceList != null) {
-            for (int i = 0; i < stockPriceList.size(); i++) {
-                float price = stockPriceList.get(i);
-                float off = Math.abs(price - lastClose);
-                max = Math.max(off, max);
+    private void initXYText() {
+        for (Float stockPrice : stockPriceList) {
+            if (maxY < stockPrice) {
+                maxY = stockPrice;
             }
         }
-        return max;
-    }
 
-    /**
-     * 价格最小值
-     *
-     * @return
-     */
-    private float getMinStockPrice() {
-        float min = 0.0f;
-        if (stockPriceList != null && stockPriceList.size() > 0) {
-            for (int i = 0; i < stockPriceList.size(); i++) {
-                float nextPrice = stockPriceList.get(i);
-                if (i == 0) {
-                    min = nextPrice;
-                }
-                min = Math.min(min, nextPrice);
-            }
+        if (maxY > lastClose) {
+            minY = lastClose * 2 - maxY;
+        } else {
+            minY = maxY;
+            maxY = lastClose * 2 - maxY;
         }
-        return min;
+
+        percent = " " + decimalFormat.format((maxY - lastClose) / 100) + "%";
     }
 }
