@@ -5,6 +5,7 @@ import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.DashPathEffect;
 import android.graphics.Paint;
+import android.graphics.Path;
 import android.graphics.PathEffect;
 import android.graphics.Rect;
 import android.support.annotation.Nullable;
@@ -79,6 +80,7 @@ public class KView extends View {
 
     private Paint columnPaint;
     private Paint rowPaint;
+    private Path path;
 
     public KView(Context context) {
         this(context, null);
@@ -95,14 +97,17 @@ public class KView extends View {
 
 
     private void init() {
-        columnPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+        columnPaint = new Paint();
         columnPaint.setColor(ResUtil.getColor(R.color.k_view_column));
-        columnPaint.setStrokeWidth(1);
+        columnPaint.setStyle(Paint.Style.STROKE);
         columnPaint.setPathEffect(mDashEffect);
 
         rowPaint = new Paint();
         rowPaint.setColor(ResUtil.getColor(R.color.k_view_row));
+        rowPaint.setStyle(Paint.Style.STROKE);
         rowPaint.setPathEffect(mDashEffect);
+
+        path = new Path();
 
         xYTextPaint = new Paint();
         xYTextPaint.setTextSize(xYTextSize);
@@ -136,7 +141,6 @@ public class KView extends View {
         // 绘制横线
         drawRowLine(canvas, viewHeight, viewWidth, rowSpacing);
 
-
         // 绘制坐标
         drawXYText(canvas, viewHeight, viewWidth);
     }
@@ -157,8 +161,10 @@ public class KView extends View {
      */
     private void drawColumnLine(Canvas canvas, int viewHeight, float space) {
         for (int i = 1; i < column; i++) {
-            canvas.drawLine(margin + space * i, 1, margin + space * i,
-                    viewHeight - 1, columnPaint);
+            path.reset();
+            path.moveTo(margin + space * i, 1);
+            path.lineTo(margin + space * i, viewHeight - 1);
+            canvas.drawPath(path, columnPaint);
         }
     }
 
@@ -167,10 +173,11 @@ public class KView extends View {
      */
     private void drawRowLine(Canvas canvas, int viewHeight, int viewWidth, float space) {
         for (int i = 1; i < row; i++) {
-            canvas.drawLine(margin, viewHeight + 1 - space * i, viewWidth - margin,
-                    viewHeight + 1 - space * i, rowPaint);
+            path.reset();
+            path.moveTo(margin, viewHeight + 1 - space * i);
+            path.lineTo(viewWidth - margin, viewHeight + 1 - space * i);
+            canvas.drawPath(path, rowPaint);
         }
-
     }
 
     /**
