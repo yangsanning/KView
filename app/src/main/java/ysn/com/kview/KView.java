@@ -7,13 +7,9 @@ import android.graphics.DashPathEffect;
 import android.graphics.Paint;
 import android.graphics.PathEffect;
 import android.graphics.Rect;
-import android.graphics.RectF;
 import android.support.annotation.Nullable;
 import android.util.AttributeSet;
-import android.util.Log;
 import android.view.View;
-
-import com.lazy.library.logging.Logcat;
 
 import java.text.DecimalFormat;
 import java.util.ArrayList;
@@ -69,18 +65,20 @@ public class KView extends View {
      */
     private PathEffect mDashEffect = DEFAULT_DASH_EFFECT;
 
-    private DecimalFormat decimalFormat;
-
     /**
      * 当前价格集合
      */
     private List<Float> stockPriceList = new ArrayList<>();
     private Paint xYTextPaint;
+    private Paint xYTextBgPaint;
     private float lastClose = 0.0f;
     private float maxStockPrice = 0.0f;
     private float minStockPrice = 0.0f;
 
-    private Paint xYTextBgPaint;
+    private DecimalFormat decimalFormat;
+
+    private Paint columnPaint;
+    private Paint rowPaint;
 
     public KView(Context context) {
         this(context, null);
@@ -97,6 +95,15 @@ public class KView extends View {
 
 
     private void init() {
+        columnPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+        columnPaint.setColor(ResUtil.getColor(R.color.k_view_column));
+        columnPaint.setStrokeWidth(1);
+        columnPaint.setPathEffect(mDashEffect);
+
+        rowPaint = new Paint();
+        rowPaint.setColor(ResUtil.getColor(R.color.k_view_row));
+        rowPaint.setPathEffect(mDashEffect);
+
         xYTextPaint = new Paint();
         xYTextPaint.setTextSize(xYTextSize);
         xYTextPaint.setAntiAlias(true);
@@ -111,6 +118,7 @@ public class KView extends View {
     @Override
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
+
         int viewHeight = getHeight();
         int viewWidth = getWidth();
         maxStockPrice = getMaxStockPrice();
@@ -123,13 +131,46 @@ public class KView extends View {
         drawBorders(canvas, viewHeight, viewWidth);
 
         // 绘制竖线
-        drawLongitudes(canvas, viewHeight, columnSpacing);
+        drawColumnLine(canvas, viewHeight, columnSpacing);
 
         // 绘制横线
-        drawLatitudes(canvas, viewHeight, viewWidth, rowSpacing);
+        drawRowLine(canvas, viewHeight, viewWidth, rowSpacing);
+
 
         // 绘制坐标
         drawXYText(canvas, viewHeight, viewWidth);
+    }
+
+    /**
+     * 绘制边框
+     */
+    private void drawBorders(Canvas canvas, int viewHeight, int viewWidth) {
+        Paint paint = new Paint(Paint.ANTI_ALIAS_FLAG);
+        paint.setColor(ResUtil.getColor(R.color.k_view_frame));
+        paint.setStrokeWidth(1);
+        canvas.drawLine(margin, 1, viewWidth - margin, 1, paint);
+        canvas.drawLine(viewWidth - margin, viewHeight - 1, margin, viewHeight - 1, paint);
+    }
+
+    /**
+     * 绘制竖线
+     */
+    private void drawColumnLine(Canvas canvas, int viewHeight, float space) {
+        for (int i = 1; i < column; i++) {
+            canvas.drawLine(margin + space * i, 1, margin + space * i,
+                    viewHeight - 1, columnPaint);
+        }
+    }
+
+    /**
+     * 绘制横线
+     */
+    private void drawRowLine(Canvas canvas, int viewHeight, int viewWidth, float space) {
+        for (int i = 1; i < row; i++) {
+            canvas.drawLine(margin, viewHeight + 1 - space * i, viewWidth - margin,
+                    viewHeight + 1 - space * i, rowPaint);
+        }
+
     }
 
     /**
@@ -177,52 +218,6 @@ public class KView extends View {
         canvas.drawRect(rect1, xYTextBgPaint);
         canvas.drawText("-" + decreasePrice.trim(), rect1.left + xYTextMargin,
                 rect1.bottom - xYTextMargin, xYTextPaint);
-    }
-
-
-    /**
-     * 绘制边框
-     */
-    private void drawBorders(Canvas canvas, int viewHeight, int viewWidth) {
-        Paint paint = new Paint(Paint.ANTI_ALIAS_FLAG);
-        paint.setColor(ResUtil.getColor(R.color.k_view_frame));
-        paint.setStrokeWidth(1);
-        canvas.drawLine(margin, 1, viewWidth - margin, 1, paint);
-        canvas.drawLine(viewWidth - margin, viewHeight - 1, margin, viewHeight - 1, paint);
-    }
-
-    /**
-     * 绘制竖线
-     */
-    private void drawLongitudes(Canvas canvas, int viewHeight, float space) {
-        Paint paint = new Paint(Paint.ANTI_ALIAS_FLAG);
-        paint.setColor(ResUtil.getColor(R.color.k_view_column));
-        paint.setStrokeWidth(1);
-        paint.setPathEffect(mDashEffect);
-        setLayerType(LAYER_TYPE_SOFTWARE, null);
-        for (int i = 1; i < column; i++) {
-            canvas.drawLine(margin + space * i, 1, margin + space * i,
-                    viewHeight - 1, paint);
-        }
-    }
-
-    /**
-     * 绘制横线
-     *
-     * @param canvas
-     * @param viewHeight
-     * @param viewWidth
-     */
-    private void drawLatitudes(Canvas canvas, int viewHeight, int viewWidth, float space) {
-        Paint paint = new Paint();
-        paint.setColor(ResUtil.getColor(R.color.k_view_row));
-        paint.setPathEffect(mDashEffect);
-
-        for (int i = 1; i < row; i++) {
-            canvas.drawLine(margin, viewHeight + 1 - space * i, viewWidth - margin,
-                    viewHeight + 1 - space * i, paint);
-        }
-
     }
 
     public void setDate(TimeSharing timeSharing) {
