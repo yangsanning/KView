@@ -89,8 +89,6 @@ public class KView extends View {
     private float timeTableHeight;
     private float bottomTableHeight;
     private int viewWidth;
-    private float xSpace;
-    private float ySpace;
     private Paint linePaint;
     private Paint priceLinePaint;
 
@@ -138,12 +136,13 @@ public class KView extends View {
         xYTextBgPaint.setColor(Color.YELLOW);
 
         linePaint = new Paint();
-        linePaint.setColor(ResUtil.getColor(R.color.colorAccent));
+        linePaint.setColor(ResUtil.getColor(R.color.k_view_frame));
+        linePaint.setStrokeWidth((float) 1.5);
         linePaint.setStyle(Paint.Style.STROKE);
 
         priceLinePaint = new Paint();
         priceLinePaint.setAntiAlias(true);
-        priceLinePaint.setStrokeWidth(2);
+        priceLinePaint.setStrokeWidth(3);
     }
 
     @Override
@@ -155,7 +154,6 @@ public class KView extends View {
         timeTableHeight = xYTextSize + 8;
         bottomTableHeight = viewHeight - topTableHeight - timeTableHeight - 1;
         viewWidth = getWidth();
-        initXYText();
 
         // 绘制边框
         drawBorders(canvas);
@@ -166,14 +164,18 @@ public class KView extends View {
         // 绘制横线
         drawRowLine(canvas);
 
-        // 绘制价格线
+        // 绘制时间坐标
+        drawTimeText(canvas);
+
+        if (stockPriceList.isEmpty()) {
+            return;
+        }
+
+        // 绘制价格区域
         drawPriceLine(canvas);
 
         // 绘制坐标
         drawXYText(canvas);
-
-        // 绘制时间坐标
-        drawTimeText(canvas);
 
         // 绘制柱形
         drawPillar(canvas);
@@ -183,15 +185,12 @@ public class KView extends View {
      * 绘制边框
      */
     private void drawBorders(Canvas canvas) {
-        Paint paint = new Paint(Paint.ANTI_ALIAS_FLAG);
-        paint.setColor(ResUtil.getColor(R.color.k_view_frame));
-        paint.setStrokeWidth(1);
-        canvas.drawLine(margin, 1, viewWidth - margin, 1, paint);
-        canvas.drawLine(margin, topTableHeight - 1, viewWidth - margin, topTableHeight - 1, paint);
+        canvas.drawLine(margin, 1, viewWidth - margin, 1, linePaint);
+        canvas.drawLine(margin, topTableHeight - 1, viewWidth - margin, topTableHeight - 1, linePaint);
         canvas.drawLine(margin, topTableHeight + timeTableHeight, viewWidth - margin,
-                topTableHeight + timeTableHeight, paint);
-        canvas.drawLine(viewWidth - margin, viewHeight - 1, margin, viewHeight - 1, paint);
-        canvas.drawLine(viewWidth - margin, viewHeight - 1, margin, viewHeight - 1, paint);
+                topTableHeight + timeTableHeight, linePaint);
+        canvas.drawLine(viewWidth - margin, viewHeight - 1, margin, viewHeight - 1, linePaint);
+        canvas.drawLine(viewWidth - margin, viewHeight - 1, margin, viewHeight - 1, linePaint);
     }
 
     /**
@@ -282,9 +281,12 @@ public class KView extends View {
     }
 
     /**
-     * 绘制价格线
+     * 绘制价格区域
      */
     private void drawPriceLine(Canvas canvas) {
+        float xSpace = (viewWidth - margin * 2) / (float) COUNT_DEFAULT;
+        float ySpace = (topTableHeight / (maxY - minY));
+
         path.reset();
         path.moveTo(margin, lastClose - stockPriceList.get(0) + topTableHeight / 2);
         for (int i = 1; i < stockPriceList.size(); i++) {
@@ -303,12 +305,17 @@ public class KView extends View {
 
         priceLinePaint.setColor(ResUtil.getColor(R.color.k_view_price_line));
         priceLinePaint.setStyle(Paint.Style.STROKE);
+        // 绘制价格线
         canvas.drawPath(path, priceLinePaint);
-        path.lineTo(viewWidth - margin, topTableHeight - 1);
-        path.lineTo(margin, topTableHeight - 1);
+        // 右下角坐标
+        path.lineTo(viewWidth - margin, (float) (topTableHeight - 2));
+        // 左下角坐标
+        path.lineTo(margin, (float) (topTableHeight - 2));
+        // 起点
         path.lineTo(margin, lastClose - stockPriceList.get(0) + topTableHeight / 2);
         priceLinePaint.setColor(ResUtil.getColor(R.color.k_view_price_line_bg));
         priceLinePaint.setStyle(Paint.Style.FILL);
+        // 绘制价格区域
         canvas.drawPath(path, priceLinePaint);
     }
 
@@ -333,7 +340,6 @@ public class KView extends View {
         }
     }
 
-
     public void setDate(TimeSharing timeSharing) {
         String[] stockPrices = timeSharing.stockPrice.split(",");
         if (stockPrices.length > 0) {
@@ -357,14 +363,11 @@ public class KView extends View {
                 stockVolumeList.add(Float.parseFloat(stockVolume));
             }
         }
-        for (Float stockVolume : stockVolumeList) {
-            if (maxStokcVolume < stockVolume) {
-                maxStokcVolume = stockVolume;
-            }
-        }
+
+        initData();
     }
 
-    private void initXYText() {
+    private void initData() {
         for (Float stockPrice : stockPriceList) {
             if (maxY < stockPrice) {
                 maxY = stockPrice;
@@ -397,8 +400,14 @@ public class KView extends View {
             maxY = lastClose * 2 - maxY;
         }
 
+        // 百分比坐标值
         percent = " " + decimalFormat.format((maxY - lastClose) / 100) + "%";
-        xSpace = (viewWidth - margin * 2) / (float) COUNT_DEFAULT;
-        ySpace = (topTableHeight / (maxY - minY));
+
+        // 找到最大成交量
+        for (Float stockVolume : stockVolumeList) {
+            if (maxStokcVolume < stockVolume) {
+                maxStokcVolume = stockVolume;
+            }
+        }
     }
 }
