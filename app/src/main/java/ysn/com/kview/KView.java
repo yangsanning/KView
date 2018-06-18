@@ -12,8 +12,6 @@ import android.support.annotation.Nullable;
 import android.util.AttributeSet;
 import android.view.View;
 
-import com.lazy.library.logging.Logcat;
-
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.List;
@@ -94,6 +92,7 @@ public class KView extends View {
     private float xSpace;
     private float ySpace;
     private Paint linePaint;
+    private Paint priceLinePaint;
 
     /**
      * 当前交易量
@@ -141,6 +140,10 @@ public class KView extends View {
         linePaint = new Paint();
         linePaint.setColor(ResUtil.getColor(R.color.colorAccent));
         linePaint.setStyle(Paint.Style.STROKE);
+
+        priceLinePaint = new Paint();
+        priceLinePaint.setAntiAlias(true);
+        priceLinePaint.setStrokeWidth(2);
     }
 
     @Override
@@ -163,14 +166,14 @@ public class KView extends View {
         // 绘制横线
         drawRowLine(canvas);
 
+        // 绘制价格线
+        drawPriceLine(canvas);
+
         // 绘制坐标
         drawXYText(canvas);
 
         // 绘制时间坐标
         drawTimeText(canvas);
-
-        // 绘制价格线
-        drawLine(canvas);
 
         // 绘制柱形
         drawPillar(canvas);
@@ -281,14 +284,32 @@ public class KView extends View {
     /**
      * 绘制价格线
      */
-    private void drawLine(Canvas canvas) {
+    private void drawPriceLine(Canvas canvas) {
         path.reset();
         path.moveTo(margin, lastClose - stockPriceList.get(0) + topTableHeight / 2);
         for (int i = 1; i < stockPriceList.size(); i++) {
             path.lineTo(margin + xSpace * i, (lastClose - stockPriceList.get(i)) * ySpace + topTableHeight / 2);
-            Logcat.d("i: " + margin + xSpace * i);
         }
-        canvas.drawPath(path, linePaint);
+
+        //渐变效果
+//        LinearGradient gradient = new LinearGradient(0.0f,
+//                (0),
+//                0,
+//                topTableHeight,
+//                ResUtil.getColor(R.color.red),
+//                ResUtil.getColor(R.color.k_view_price_line_bg),
+//                Shader.TileMode.CLAMP);
+//        priceLinePaint.setShader(gradient);
+
+        priceLinePaint.setColor(ResUtil.getColor(R.color.k_view_price_line));
+        priceLinePaint.setStyle(Paint.Style.STROKE);
+        canvas.drawPath(path, priceLinePaint);
+        path.lineTo(viewWidth - margin, topTableHeight - 1);
+        path.lineTo(margin, topTableHeight - 1);
+        path.lineTo(margin, lastClose - stockPriceList.get(0) + topTableHeight / 2);
+        priceLinePaint.setColor(ResUtil.getColor(R.color.k_view_price_line_bg));
+        priceLinePaint.setStyle(Paint.Style.FILL);
+        canvas.drawPath(path, priceLinePaint);
     }
 
     /**
