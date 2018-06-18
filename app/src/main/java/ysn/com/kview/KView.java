@@ -42,7 +42,7 @@ public class KView extends View {
     /**
      * 两边边距
      */
-    private float margin = 20;
+    private float margin = 22;
 
     /**
      * 坐标字体大小
@@ -218,39 +218,39 @@ public class KView extends View {
         Rect rect1 = new Rect();
         xYTextPaint.getTextBounds(maxPrice, 0, maxPrice.length(), rect1);
         rect1.left += margin;
+        rect1.right += rect1.left + margin;
         rect1.top += xYTextSize - xYTextMargin;
-        rect1.right += rect1.left + xYTextMargin * 2;
         rect1.bottom += xYTextMargin + xYTextSize;
         canvas.drawRect(rect1, xYTextBgPaint);
-        canvas.drawText(maxPrice, margin + xYTextMargin, xYTextSize, xYTextPaint);
+        canvas.drawText(maxPrice, margin + margin / 2, xYTextSize, xYTextPaint);
 
         // 价格最小值
         String minPrice = decimalFormat.format(minY);
         xYTextPaint.getTextBounds(minPrice, 0, minPrice.length(), rect1);
         rect1.left += margin;
-        rect1.right += rect1.left + xYTextMargin * 2;
+        rect1.right += rect1.left + margin;
         rect1.bottom += topTableHeight - xYTextMargin / 2;
         rect1.top = (int) (rect1.bottom - xYTextSize - xYTextMargin / 2);
         canvas.drawRect(rect1, xYTextBgPaint);
-        canvas.drawText(minPrice, margin + xYTextMargin, rect1.bottom - xYTextMargin, xYTextPaint);
+        canvas.drawText(minPrice, margin + margin / 2, rect1.bottom - xYTextMargin, xYTextPaint);
 
         // 增幅
         xYTextPaint.getTextBounds(percent, 0, percent.length(), rect1);
-        rect1.left += viewWidth - rect1.right - xYTextMargin * 3 - margin * 2;
+        rect1.left += viewWidth - rect1.width() -margin*3;
+        rect1.right += rect1.left + margin + xYTextMargin;
         rect1.top += xYTextSize - xYTextMargin;
-        rect1.right += rect1.left + xYTextMargin * 2;
         rect1.bottom += xYTextMargin + xYTextSize;
         canvas.drawRect(rect1, xYTextBgPaint);
         canvas.drawText(percent.trim(), rect1.left + xYTextMargin, xYTextSize, xYTextPaint);
 
         // 减幅
         xYTextPaint.getTextBounds(percent, 0, percent.length(), rect1);
-        rect1.left += viewWidth - rect1.right - xYTextMargin * 3 - margin * 2;
-        rect1.right += rect1.left + xYTextMargin * 2;
+        rect1.left += viewWidth - rect1.width() -margin*3;
+        rect1.right += rect1.left + margin + xYTextMargin;
         rect1.top = (int) (topTableHeight - xYTextSize - xYTextMargin);
         rect1.bottom = (int) (topTableHeight - xYTextMargin / 2);
         canvas.drawRect(rect1, xYTextBgPaint);
-        canvas.drawText("-" + percent.trim(), rect1.left + xYTextMargin,
+        canvas.drawText("-" + percent.trim(), rect1.left + margin/2,
                 rect1.bottom - xYTextMargin, xYTextPaint);
     }
 
