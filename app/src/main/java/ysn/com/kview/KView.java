@@ -31,6 +31,7 @@ import ysn.com.kview.util.ResUtil;
 public class KView extends View {
 
     private static final int POINT_COUNT_DEFAULT = 240;
+    private static final String[] timeText = new String[]{"09:30", "11:30/13:00", "15:00"};
 
     /**
      * 默认虚线效果
@@ -142,7 +143,7 @@ public class KView extends View {
 
         viewHeight = getHeight();
         topTableHeight = (int) ((viewHeight - xYTextSize - 2) * 4 / 5);
-        timeTableHeight = (int) (topTableHeight + xYTextSize + 5);
+        timeTableHeight = xYTextSize + 8;
         bottomTableHeight = viewHeight - topTableHeight - timeTableHeight - 1;
         viewWidth = getWidth();
         initXYText();
@@ -162,6 +163,9 @@ public class KView extends View {
         // 绘制坐标
         drawXYText(canvas);
 
+        // 绘制时间坐标
+        drawTimeText(canvas);
+
         // 绘制价格线
         drawLine(canvas);
     }
@@ -175,7 +179,8 @@ public class KView extends View {
         paint.setStrokeWidth(1);
         canvas.drawLine(margin, 1, viewWidth - margin, 1, paint);
         canvas.drawLine(margin, topTableHeight - 1, viewWidth - margin, topTableHeight - 1, paint);
-        canvas.drawLine(margin, timeTableHeight, viewWidth - margin, timeTableHeight, paint);
+        canvas.drawLine(margin, topTableHeight + timeTableHeight, viewWidth - margin,
+                topTableHeight + timeTableHeight, paint);
         canvas.drawLine(viewWidth - margin, viewHeight - 1, margin, viewHeight - 1, paint);
         canvas.drawLine(viewWidth - margin, viewHeight - 1, margin, viewHeight - 1, paint);
     }
@@ -247,6 +252,22 @@ public class KView extends View {
         canvas.drawRect(rect1, xYTextBgPaint);
         canvas.drawText("-" + percent.trim(), rect1.left + xYTextMargin,
                 rect1.bottom - xYTextMargin, xYTextPaint);
+    }
+
+    /**
+     * 绘制时间坐标
+     */
+    private void drawTimeText(Canvas canvas) {
+        Rect rect = new Rect();
+        xYTextPaint.getTextBounds(timeText[0], 0, timeText[0].length(), rect);
+        canvas.drawText(timeText[0], margin + margin / 2,
+                topTableHeight + (timeTableHeight - xYTextSize) / 2 + xYTextSize - xYTextMargin, xYTextPaint);
+        xYTextPaint.getTextBounds(timeText[1], 0, timeText[0].length(), rect);
+        canvas.drawText(timeText[1], (viewWidth - rect.right) / 2 - margin * 2,
+                topTableHeight + (timeTableHeight - xYTextSize) / 2 + xYTextSize - xYTextMargin, xYTextPaint);
+        xYTextPaint.getTextBounds(timeText[2], 0, timeText[0].length(), rect);
+        canvas.drawText(timeText[2], viewWidth - rect.right - margin - margin / 2,
+                topTableHeight + (timeTableHeight - xYTextSize) / 2 + xYTextSize - xYTextMargin, xYTextPaint);
     }
 
     /**
