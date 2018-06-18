@@ -30,7 +30,7 @@ import ysn.com.kview.util.ResUtil;
  */
 public class KView extends View {
 
-    private static final int POINT_COUNT_DEFAULT = 240;
+    private static final int COUNT_DEFAULT = 240;
     private static final String[] timeText = new String[]{"09:30", "11:30/13:00", "15:00"};
 
     /**
@@ -95,6 +95,12 @@ public class KView extends View {
     private float ySpace;
     private Paint linePaint;
 
+    /**
+     * 当前交易量
+     */
+    private List<Float> stockVolumeList = new ArrayList<>();
+    private float maxStokcVolume;
+
     public KView(Context context) {
         this(context, null);
     }
@@ -148,17 +154,14 @@ public class KView extends View {
         viewWidth = getWidth();
         initXYText();
 
-        float columnSpacing = (viewWidth - 2 * margin) / column;
-        float rowSpacing = topTableHeight / row;
-
         // 绘制边框
         drawBorders(canvas);
 
         // 绘制竖线
-        drawColumnLine(canvas, columnSpacing);
+        drawColumnLine(canvas);
 
         // 绘制横线
-        drawRowLine(canvas, rowSpacing);
+        drawRowLine(canvas);
 
         // 绘制坐标
         drawXYText(canvas);
@@ -168,6 +171,9 @@ public class KView extends View {
 
         // 绘制价格线
         drawLine(canvas);
+
+        // 绘制柱形
+        drawPillar(canvas);
     }
 
     /**
@@ -188,11 +194,12 @@ public class KView extends View {
     /**
      * 绘制竖线
      */
-    private void drawColumnLine(Canvas canvas, float space) {
+    private void drawColumnLine(Canvas canvas) {
+        float columnSpacing = (viewWidth - 2 * margin) / column;
         for (int i = 1; i < column; i++) {
             path.reset();
-            path.moveTo(margin + space * i, 1);
-            path.lineTo(margin + space * i, topTableHeight - 1);
+            path.moveTo(margin + columnSpacing * i, 1);
+            path.lineTo(margin + columnSpacing * i, topTableHeight - 1);
             canvas.drawPath(path, columnPaint);
         }
     }
@@ -200,11 +207,12 @@ public class KView extends View {
     /**
      * 绘制横线
      */
-    private void drawRowLine(Canvas canvas, float space) {
+    private void drawRowLine(Canvas canvas) {
+        float rowSpacing = topTableHeight / row;
         for (int i = 1; i < row; i++) {
             path.reset();
-            path.moveTo(margin, topTableHeight + 1 - space * i);
-            path.lineTo(viewWidth - margin, topTableHeight + 1 - space * i);
+            path.moveTo(margin, topTableHeight + 1 - rowSpacing * i);
+            path.lineTo(viewWidth - margin, topTableHeight + 1 - rowSpacing * i);
             canvas.drawPath(path, rowPaint);
         }
     }
@@ -236,7 +244,7 @@ public class KView extends View {
 
         // 增幅
         xYTextPaint.getTextBounds(percent, 0, percent.length(), rect1);
-        rect1.left += viewWidth - rect1.width() -margin*3;
+        rect1.left += viewWidth - rect1.width() - margin * 3;
         rect1.right += rect1.left + margin + xYTextMargin;
         rect1.top += xYTextSize - xYTextMargin;
         rect1.bottom += xYTextMargin + xYTextSize;
@@ -245,12 +253,12 @@ public class KView extends View {
 
         // 减幅
         xYTextPaint.getTextBounds(percent, 0, percent.length(), rect1);
-        rect1.left += viewWidth - rect1.width() -margin*3;
+        rect1.left += viewWidth - rect1.width() - margin * 3;
         rect1.right += rect1.left + margin + xYTextMargin;
         rect1.top = (int) (topTableHeight - xYTextSize - xYTextMargin);
         rect1.bottom = (int) (topTableHeight - xYTextMargin / 2);
         canvas.drawRect(rect1, xYTextBgPaint);
-        canvas.drawText("-" + percent.trim(), rect1.left + margin/2,
+        canvas.drawText("-" + percent.trim(), rect1.left + margin / 2,
                 rect1.bottom - xYTextMargin, xYTextPaint);
     }
 
@@ -283,6 +291,28 @@ public class KView extends View {
         canvas.drawPath(path, linePaint);
     }
 
+    /**
+     * 绘制柱形
+     */
+    private void drawPillar(Canvas canvas) {
+        float columnSpace = (viewWidth - margin * 2) / (COUNT_DEFAULT * 2);
+        Paint paint = new Paint();
+        paint.setStrokeWidth(columnSpace);
+        for (int i = 0; i < stockPriceList.size(); i++) {
+            if (stockPriceList.get(i) >= lastClose) {
+                paint.setColor(ResUtil.getColor(R.color.red));
+            } else {
+                paint.setColor(ResUtil.getColor(R.color.green));
+            }
+
+            canvas.drawLine(margin + columnSpace * i * 2,
+                    viewHeight - 1,
+                    margin + columnSpace * i * 2,
+                    viewHeight - (stockVolumeList.get(i) / maxStokcVolume) * bottomTableHeight * 0.95f, paint);
+        }
+    }
+
+
     public void setDate(TimeSharing timeSharing) {
         String[] stockPrices = timeSharing.stockPrice.split(",");
         if (stockPrices.length > 0) {
@@ -295,6 +325,22 @@ public class KView extends View {
             }
         }
         lastClose = timeSharing.lastClose;
+
+        String[] stockVolumes = timeSharing.stockVolume.split(",");
+        if (stockVolumes.length > 0) {
+            if (stockVolumeList != null && stockVolumeList.size() > 0) {
+                stockVolumeList.clear();
+            }
+
+            for (String stockVolume : stockVolumes) {
+                stockVolumeList.add(Float.parseFloat(stockVolume));
+            }
+        }
+        for (Float stockVolume : stockVolumeList) {
+            if (maxStokcVolume < stockVolume) {
+                maxStokcVolume = stockVolume;
+            }
+        }
     }
 
     private void initXYText() {
@@ -331,7 +377,7 @@ public class KView extends View {
         }
 
         percent = " " + decimalFormat.format((maxY - lastClose) / 100) + "%";
-        xSpace = (viewWidth - margin * 2) / (float) POINT_COUNT_DEFAULT;
+        xSpace = (viewWidth - margin * 2) / (float) COUNT_DEFAULT;
         ySpace = (topTableHeight / (maxY - minY));
     }
 }

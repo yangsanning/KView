@@ -9,6 +9,7 @@ package ysn.com.kview.mode.bean;
  */
 public class TimeSharing {
 
-    public String stockPrice="";
+    public String stockPrice = "";
     public float lastClose;
+    public String stockVolume = "";
 }
